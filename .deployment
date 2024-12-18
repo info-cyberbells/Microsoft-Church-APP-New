@@ -1,2 +1,4 @@
+# Add to your .deployment file
 [config]
 SCM_DO_BUILD_DURING_DEPLOYMENT=true
+POST_DEPLOYMENT_ACTION=chmod +x startup.sh
