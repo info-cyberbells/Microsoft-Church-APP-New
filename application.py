@@ -686,7 +686,7 @@ if __name__ == '__main__':
         if not is_running_from_reloader():
             # Run with waitress
             logger.info("Starting with Waitress server")
-            serve(app, host='0.0.0.0', port=4585, threads=8,
+            serve(app, host='0.0.0.0', port=8000, threads=8,
                   url_scheme='http', channel_timeout=300,
                   cleanup_interval=30, outbuf_overflow=104857600)
         else:
