@@ -696,3 +696,4 @@ if __name__ == '__main__':
     except Exception as e:
         logger.error(f"Application startup error: {str(e)}", exc_info=True)
         cleanup()
+
