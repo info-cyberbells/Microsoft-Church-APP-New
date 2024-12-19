@@ -1,10 +1,14 @@
+# Use a base Python image
 FROM python:3.9-bullseye
 
-# Prevent interactive prompts
+# Prevent interactive prompts during apt-get
 ENV DEBIAN_FRONTEND=noninteractive
 
-# Install system dependencies
-RUN apt-get update && apt-get install -y \
+# Update the package lists
+RUN apt-get update
+
+# Install system dependencies for pyaudio
+RUN apt-get install -y \
     build-essential \
     portaudio19-dev \
     python3-pyaudio \
@@ -13,35 +17,30 @@ RUN apt-get update && apt-get install -y \
     libc6 \
     && rm -rf /var/lib/apt/lists/*
 
-# Set working directory
+# Set the working directory
 WORKDIR /home/site/wwwroot
 
 # Upgrade pip
-RUN pip install --no-cache-dir --upgrade pip
+RUN python -m pip install --upgrade pip
 
-# Create virtual environment
+# Create a virtual environment
 RUN python -m venv /opt/venv
 ENV PATH="/opt/venv/bin:$PATH"
 
-# Copy requirements and install dependencies
+# Copy requirements and install Python dependencies
 COPY requirements.txt .
-RUN pip install --no-cache-dir \
-    wheel \
-    && pip install --no-cache-dir -r requirements.txt
+RUN pip install --no-cache-dir -r requirements.txt
 
-# Download spacy model
-RUN python -m spacy download en_core_web_sm
-
-# Copy application code
+# Copy the application code
 COPY . .
 
-# Create non-root user
+# Create a non-root user
 RUN addgroup --system appuser && adduser --system --group appuser
 RUN chown -R appuser:appuser /home/site/wwwroot
 USER appuser
 
-# Expose port
+# Expose the port
 EXPOSE 8000
 
-# Default command
+# Set the command to run the application
 CMD ["gunicorn", "--bind", "0.0.0.0:8000", "application:app"]
