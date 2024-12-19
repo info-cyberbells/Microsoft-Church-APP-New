@@ -1,10 +1,6 @@
-
-
 #============================================================================================================================================
 
-
 ####### Part 1 - Main Application Setup and Configurations  ######
-
 
 from flask import Flask, render_template, request, jsonify, Response, make_response
 from flask_cors import CORS
@@ -686,7 +682,7 @@ if __name__ == '__main__':
         if not is_running_from_reloader():
             # Run with waitress
             logger.info("Starting with Waitress server")
-            serve(app, host='0.0.0.0', port=8000, threads=8,
+            serve(app, host='0.0.0.0', port=4585, threads=8,
                   url_scheme='http', channel_timeout=300,
                   cleanup_interval=30, outbuf_overflow=104857600)
         else:
@@ -696,4 +692,3 @@ if __name__ == '__main__':
     except Exception as e:
         logger.error(f"Application startup error: {str(e)}", exc_info=True)
         cleanup()
-
