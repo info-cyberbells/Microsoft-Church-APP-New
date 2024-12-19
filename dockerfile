@@ -3,13 +3,14 @@ FROM ubuntu:20.04
 # Prevent interactive prompts during apt-get
 ENV DEBIAN_FRONTEND=noninteractive
 
-# Install Python and required system libraries
+# Install Python, required system libraries, and GLIBC
 RUN apt-get update && apt-get install -y \
     python3.9 \
     python3-pip \
     libssl-dev \
     libasound2 \
     build-essential \
+    libc6 \
     && rm -rf /var/lib/apt/lists/*
 
 # Set working directory
