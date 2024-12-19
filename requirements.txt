@@ -40,3 +40,8 @@ matplotlib==3.9.2
 tqdm==4.66.2
 PyYAML==6.0.1
 python-dateutil==2.9.0.post0
+
+aiohttp==3.9.5
+pyaudio==0.2.14
+cachetools==5.3.3
+waitress==2.2.0
