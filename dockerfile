@@ -11,10 +11,12 @@ RUN apt-get update && apt-get install -y \
     libasound2 \
     build-essential \
     libc6 \
+    wget \
     && rm -rf /var/lib/apt/lists/*
 
-# Set working directory
-WORKDIR /app
+# Create necessary directories for Azure App Service
+RUN mkdir -p /home/site/wwwroot
+WORKDIR /home/site/wwwroot
 
 # Copy requirements and install dependencies
 COPY requirements.txt .
@@ -26,5 +28,4 @@ COPY . .
 # Expose port
 EXPOSE 8000
 
-# Command to run the application
-CMD ["gunicorn", "--bind", "0.0.0.0:8000", "application:app"]
+# No CMD needed as we'll use startup command from Azure
