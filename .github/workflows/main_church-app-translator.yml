@@ -9,7 +9,6 @@ on:
 jobs:
   build:
     runs-on: ubuntu-latest
-
     steps:
       - uses: actions/checkout@v4
 
@@ -34,13 +33,6 @@ jobs:
           pip install wheel setuptools
           pip install -r requirements.txt
 
-      # Add startup command file
-      - name: Add startup files
-        run: |
-          echo "gunicorn --bind=0.0.0.0 --timeout 600 app:app" > startup.txt
-          
-      # Optional: Add step to run tests here
-
       - name: Zip artifact for deployment
         run: |
           zip release.zip ./* -r
@@ -62,9 +54,6 @@ jobs:
       name: 'Production'
       url: ${{ steps.deploy-to-webapp.outputs.webapp-url }}
 
-    permissions:
-      id-token: write
-
     steps:
       - name: Download artifact from build job
         uses: actions/download-artifact@v4
@@ -84,6 +73,12 @@ jobs:
           tenant-id: ${{ secrets.AZUREAPPSERVICE_TENANTID_014CF7380DB4419C916F6DC176B42A44 }}
           subscription-id: ${{ secrets.AZUREAPPSERVICE_SUBSCRIPTIONID_ED8CB29143BD425FB6EDF8BD0494A91B }}
 
+      # Add this step to stop the web app before deployment
+      - name: Stop Azure Web App
+        run: |
+          az webapp stop --name Church-App-Translator --resource-group ${{ secrets.AZURE_RESOURCE_GROUP }}
+          sleep 30
+
       - name: 'Deploy to Azure Web App'
         uses: azure/webapps-deploy@v3
         id: deploy-to-webapp
@@ -91,4 +86,8 @@ jobs:
           app-name: 'Church-App-Translator'
           slot-name: 'Production'
           package: .
-          startup-command: 'gunicorn --bind=0.0.0.0 --timeout 600 app:app'
+
+      # Add this step to start the web app after deployment
+      - name: Start Azure Web App
+        run: |
+          az webapp start --name Church-App-Translator --resource-group ${{ secrets.AZURE_RESOURCE_GROUP }}
