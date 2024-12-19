@@ -7,14 +7,13 @@ ENV DEBIAN_FRONTEND=noninteractive
 # Update the package lists
 RUN apt-get update
 
-# Install system dependencies for pyaudio
+# Install system dependencies for PyAudio
 RUN apt-get install -y \
     build-essential \
     portaudio19-dev \
-    python3-pyaudio \
-    libgl1-mesa-glx \
-    libglib2.0-0 \
-    libc6 \
+    libportaudio2 \
+    libportaudiocpp0 \
+    ffmpeg \
     && rm -rf /var/lib/apt/lists/*
 
 # Set the working directory
