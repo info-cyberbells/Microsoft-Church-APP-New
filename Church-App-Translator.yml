@@ -1,0 +1,106 @@
+name: Build and deploy Python app to Azure Web App - Church-App-Translator
+
+on:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+
+# Add these permissions at the workflow level
+permissions:
+  id-token: write
+  contents: read
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Set up Python version
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.9'
+
+      - name: Create and start virtual environment
+        run: |
+          python -m venv venv
+          source venv/bin/activate
+
+      - name: Install system dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y python3-dev portaudio19-dev libasound2-dev
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install wheel setuptools
+          pip install -r requirements.txt
+
+      # Add startup command file
+      - name: Add startup files
+        run: |
+          echo "gunicorn --bind=0.0.0.0 --timeout 600 application:app" > startup.txt
+
+      - name: Zip artifact for deployment
+        run: |
+          zip release.zip ./* -r
+          echo "Listing zip contents:"
+          unzip -l release.zip
+
+      - name: Upload artifact for deployment jobs
+        uses: actions/upload-artifact@v4
+        with:
+          name: python-app
+          path: |
+            release.zip
+            !venv/
+
+  deploy:
+    runs-on: ubuntu-latest
+    needs: build
+    environment:
+      name: 'Production'
+      url: ${{ steps.deploy-to-webapp.outputs.webapp-url }}
+
+    steps:
+      - name: Download artifact from build job
+        uses: actions/download-artifact@v4
+        with:
+          name: python-app
+
+      - name: Unzip artifact for deployment
+        run: |
+          unzip release.zip
+          echo "Listing deployed files:"
+          ls -la
+
+      - name: Login to Azure
+        uses: azure/login@v2
+        with:
+          client-id: ${{ secrets.AZUREAPPSERVICE_CLIENTID_E61BFFA63CBE43AEB9FE5D58BFF0D6E3 }}
+          tenant-id: ${{ secrets.AZUREAPPSERVICE_TENANTID_014CF7380DB4419C916F6DC176B42A44 }}
+          subscription-id: ${{ secrets.AZUREAPPSERVICE_SUBSCRIPTIONID_ED8CB29143BD425FB6EDF8BD0494A91B }}
+
+      - name: Stop Azure Web App
+        uses: azure/cli@v1
+        with:
+          inlineScript: |
+            az webapp stop --name Church-App-Translator --resource-group ${{ secrets.AZURE_RESOURCE_GROUP }}
+            sleep 30
+
+      - name: 'Deploy to Azure Web App'
+        uses: azure/webapps-deploy@v3
+        id: deploy-to-webapp
+        with:
+          app-name: 'Church-App-Translator'
+          slot-name: 'Production'
+          package: .
+          startup-command: 'gunicorn --bind=0.0.0.0 --timeout 600 application:app'
+
+      - name: Start Azure Web App
+        uses: azure/cli@v1
+        with:
+          inlineScript: |
+            az webapp start --name Church-App-Translator --resource-group ${{ secrets.AZURE_RESOURCE_GROUP }}
